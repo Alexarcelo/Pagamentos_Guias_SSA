@@ -55,7 +55,7 @@ def puxar_dados_phoenix():
         [['Guia', 'CNPJ/CPF Fornecedor Guia', 'Razao Social/Nome Completo Fornecedor Guia']].drop_duplicates().reset_index(drop=True)
     
 def inserir_infos_dataframe(id_gsheet, aba_excel, df_insercao):
-    # Credenciais do Google Sheets
+    
     # GCP projeto onde está a chave credencial
     project_id = "grupoluck"
 
@@ -606,10 +606,6 @@ if gerar_mapa:
     
     df_escalas_pag = pd.merge(df_escalas_group, st.session_state.df_tarifario, on='Servico', how='left')
 
-    # Ajustando valores idioma
-
-    df_escalas_pag.loc[df_escalas_pag['Idioma']!='', 'Valor'] = df_escalas_pag['Valor']*1.2
-
     # Calculando adicional p/ tours como motoguia
 
     df_escalas_pag = indentificar_motoguias(df_escalas_pag)
@@ -620,15 +616,21 @@ if gerar_mapa:
 
     df_escalas_pag['Valor Uber'] = df_escalas_pag['Valor Uber'].fillna(0)
 
-    # Gerando Valor Total
+    # Gerando Valor Serviço
 
     df_escalas_pag['Valor Serviço'] = df_escalas_pag.apply(lambda row: row['Valor Motoguia'] if row['Motoguia'] == 'X' else row['Valor'], axis=1)
 
+    # Ajustando valores idioma
+
+    df_escalas_pag.loc[df_escalas_pag['Idioma']!='', 'Valor Serviço'] = df_escalas_pag['Valor Serviço']*1.2
+
+    # Gerando Valor Total
+
     df_escalas_pag['Valor Total'] = df_escalas_pag[(['Valor Serviço', 'Valor Uber'])].sum(axis=1)
 
-    st.session_state.df_pag_final = df_escalas_pag[['Data da Escala', 'Modo', 'Tipo de Servico', 'Servico', 'Veiculo', 'Motorista', 'Guia', 'Idioma', 'Motoguia', 
-                                                      'Valor Uber', 'Valor Serviço', 'Valor Total']]
-    
+    st.session_state.df_pag_final = df_escalas_pag[['Data da Escala', 'Modo', 'Tipo de Servico', 'Servico', 'Veiculo', 'Motorista', 'Guia', 'Idioma', 'Motoguia', 'Valor Uber', 'Valor Serviço', 
+                                                    'Valor Total']]
+
 if 'df_pag_final' in st.session_state:
 
     st.header('Gerar Mapas')
