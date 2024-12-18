@@ -51,6 +51,9 @@ def puxar_dados_phoenix():
                                                                     ~(pd.isna(st.session_state.df_escalas_bruto['Status da Reserva'])) & ~(pd.isna(st.session_state.df_escalas_bruto['Escala'])) & 
                                                                     ~(pd.isna(st.session_state.df_escalas_bruto['Guia']))].reset_index(drop=True)
     
+    st.session_state.df_cnpj_fornecedores = st.session_state.df_escalas_bruto[~pd.isna(st.session_state.df_escalas_bruto['Guia'])]\
+        [['Guia', 'CNPJ/CPF Fornecedor Guia', 'Razao Social/Nome Completo Fornecedor Guia']].drop_duplicates().reset_index(drop=True)
+    
 def inserir_infos_dataframe(id_gsheet, aba_excel, df_insercao):
     # Credenciais do Google Sheets
     # GCP projeto onde está a chave credencial
@@ -374,15 +377,19 @@ def criar_output_html(nome_html, html, guia, soma_servicos):
 
     with open(nome_html, "w", encoding="utf-8") as file:
 
-        file.write(f'<p style="font-size:40px;">{guia}</p><br><br>')
+        file.write(f'<p style="font-size:40px;">{guia}</p>')
 
-        file.write(f'<p style="font-size:40px;">Serviços prestados entre {st.session_state.data_inicial.strftime("%d/%m/%Y")} e {st.session_state.data_final.strftime("%d/%m/%Y")}</p><br><br>')
+        file.write(f'<p style="font-size:30px;">Serviços prestados entre {st.session_state.data_inicial.strftime("%d/%m/%Y")} e {st.session_state.data_final.strftime("%d/%m/%Y")}</p>')
+
+        file.write(f'<p style="font-size:30px;">CPF / CNPJ: {st.session_state.cnpj}</p>')
+
+        file.write(f'<p style="font-size:30px;">Razão Social / Nome Completo: {st.session_state.razao_social}</p><br><br>')
 
         file.write(html)
 
-        file.write(f'<br><br><p style="font-size:40px;">O valor total dos serviços é {soma_servicos}</p>')
+        file.write(f'<br><br><p style="font-size:30px;">O valor total dos serviços é {soma_servicos}</p>')
 
-        file.write(f'<br><br><p style="font-size:40px;">Data de Pagamento: {st.session_state.data_pagamento.strftime("%d/%m/%Y")}</p>')
+        file.write(f'<p style="font-size:30px;">Data de Pagamento: {st.session_state.data_pagamento.strftime("%d/%m/%Y")}</p>')
 
 def verificar_guia_sem_telefone(id_gsheet, guia, lista_guias_com_telefone):
 
@@ -636,6 +643,10 @@ if 'df_pag_final' in st.session_state:
 
     if guia and data_pagamento and data_inicial and data_final:
 
+        st.session_state.cnpj = st.session_state.df_cnpj_fornecedores[st.session_state.df_cnpj_fornecedores['Guia']==guia]['CNPJ/CPF Fornecedor Guia'].iloc[0]
+
+        st.session_state.razao_social = st.session_state.df_cnpj_fornecedores[st.session_state.df_cnpj_fornecedores['Guia']==guia]['Razao Social/Nome Completo Fornecedor Guia'].iloc[0]
+
         row2_1 = st.columns(4)
 
         df_pag_guia = st.session_state.df_pag_final[st.session_state.df_pag_final['Guia']==guia].sort_values(by=['Data da Escala', 'Veiculo', 'Motorista']).reset_index(drop=True)
@@ -707,6 +718,10 @@ if 'df_pag_final' in st.session_state:
 
                 for guia_ref in lista_guias:
 
+                    st.session_state.cnpj = st.session_state.df_cnpj_fornecedores[st.session_state.df_cnpj_fornecedores['Guia']==guia_ref]['CNPJ/CPF Fornecedor Guia'].iloc[0]
+
+                    st.session_state.razao_social = st.session_state.df_cnpj_fornecedores[st.session_state.df_cnpj_fornecedores['Guia']==guia_ref]['Razao Social/Nome Completo Fornecedor Guia'].iloc[0]
+
                     telefone_guia = verificar_guia_sem_telefone(st.session_state.id_gsheet, guia_ref, st.session_state.df_telefones['Guias'].unique().tolist())
 
                     df_pag_guia = st.session_state.df_pag_final[st.session_state.df_pag_final['Guia']==guia_ref].sort_values(by=['Data da Escala', 'Veiculo', 'Motorista']).reset_index(drop=True)
@@ -760,6 +775,10 @@ if 'df_pag_final' in st.session_state:
                 lista_telefones = []
 
                 for guia_ref in lista_guias:
+
+                    st.session_state.cnpj = st.session_state.df_cnpj_fornecedores[st.session_state.df_cnpj_fornecedores['Guia']==guia_ref]['CNPJ/CPF Fornecedor Guia'].iloc[0]
+
+                    st.session_state.razao_social = st.session_state.df_cnpj_fornecedores[st.session_state.df_cnpj_fornecedores['Guia']==guia_ref]['Razao Social/Nome Completo Fornecedor Guia'].iloc[0]
 
                     df_pag_guia = st.session_state.df_pag_final[st.session_state.df_pag_final['Guia']==guia_ref].sort_values(by=['Data da Escala', 'Veiculo', 'Motorista']).reset_index(drop=True)
 
