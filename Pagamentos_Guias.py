@@ -468,7 +468,7 @@ def eliminar_escalas_city_duplicadas(df_escalas_pag):
 
         lista_escalas = escalas.split(', ')
 
-        df_escalas_ref = df_escalas_pag[df_escalas_pag['Escala'].isin(lista_escalas)].reset_index()
+        df_escalas_ref = df_escalas_pag[df_escalas_pag['Escala'].isin(lista_escalas)]
 
         indice = df_escalas_ref[df_escalas_ref['Servico'] == 'CITY TOUR HISTORICO '].index
 
