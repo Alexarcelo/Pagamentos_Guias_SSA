@@ -9,6 +9,7 @@ from datetime import time
 from google.cloud import secretmanager 
 import json
 from google.oauth2.service_account import Credentials
+import numpy as np
 
 def gerar_df_phoenix(vw_name, base_luck):
 
@@ -56,25 +57,14 @@ def puxar_dados_phoenix():
     
 def inserir_infos_dataframe(id_gsheet, aba_excel, df_insercao):
     
-    # GCP projeto onde está a chave credencial
     project_id = "grupoluck"
-
-    # ID da chave credencial do google.
     secret_id = "cred-luck-aracaju"
-
-    # Cria o cliente.
     secret_client = secretmanager.SecretManagerServiceClient()
-
     secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
     response = secret_client.access_secret_version(request={"name": secret_name})
-
     secret_payload = response.payload.data.decode("UTF-8")
-
     credentials_info = json.loads(secret_payload)
-
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-
-    # Use the credentials to authorize the gspread client
     credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
     client = gspread.authorize(credentials)
     
@@ -90,25 +80,14 @@ def inserir_infos_dataframe(id_gsheet, aba_excel, df_insercao):
 
 def puxar_aba_simples(id_gsheet, nome_aba, nome_df):
 
-    # GCP projeto onde está a chave credencial
     project_id = "grupoluck"
-
-    # ID da chave credencial do google.
     secret_id = "cred-luck-aracaju"
-
-    # Cria o cliente.
     secret_client = secretmanager.SecretManagerServiceClient()
-
     secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
     response = secret_client.access_secret_version(request={"name": secret_name})
-
     secret_payload = response.payload.data.decode("UTF-8")
-
     credentials_info = json.loads(secret_payload)
-
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-
-    # Use the credentials to authorize the gspread client
     credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
     client = gspread.authorize(credentials)
 
@@ -122,25 +101,14 @@ def puxar_aba_simples(id_gsheet, nome_aba, nome_df):
 
 def inserir_config(df_itens_faltantes, id_gsheet, nome_aba):
 
-    # GCP projeto onde está a chave credencial
     project_id = "grupoluck"
-
-    # ID da chave credencial do google.
     secret_id = "cred-luck-aracaju"
-
-    # Cria o cliente.
     secret_client = secretmanager.SecretManagerServiceClient()
-
     secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
     response = secret_client.access_secret_version(request={"name": secret_name})
-
     secret_payload = response.payload.data.decode("UTF-8")
-
     credentials_info = json.loads(secret_payload)
-
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-
-    # Use the credentials to authorize the gspread client
     credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
     client = gspread.authorize(credentials)
     
@@ -173,8 +141,6 @@ def tratar_colunas_idioma(df_escalas_group):
 
         df_escalas_group.at[index_principal, 'Idioma'] = df_idiomas.at[index, 'Idioma']
 
-    df_escalas_group['Idioma'] = df_escalas_group['Idioma'].replace({'all': 'en-us', 'it-ele': 'en-us'})
-
     return df_escalas_group
 
 def verificar_tarifarios(df_escalas_group, id_gsheet):
@@ -191,25 +157,14 @@ def verificar_tarifarios(df_escalas_group, id_gsheet):
 
         st.dataframe(df_itens_faltantes, hide_index=True)
 
-        # GCP projeto onde está a chave credencial
         project_id = "grupoluck"
-    
-        # ID da chave credencial do google.
         secret_id = "cred-luck-aracaju"
-    
-        # Cria o cliente.
         secret_client = secretmanager.SecretManagerServiceClient()
-    
         secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
         response = secret_client.access_secret_version(request={"name": secret_name})
-    
         secret_payload = response.payload.data.decode("UTF-8")
-    
         credentials_info = json.loads(secret_payload)
-    
         scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    
-        # Use the credentials to authorize the gspread client
         credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
         client = gspread.authorize(credentials)
         
@@ -243,12 +198,10 @@ def indentificar_motoguias(df_escalas_pag):
 def identificar_trf_ln_diurno_noturno(df_escalas_group):
 
     mask_ln_noturnos = (df_escalas_group['Servico'].isin([' OUT -  LITORAL NORTE ', 'IN  - LITORAL NORTE '])) & \
-        (((pd.to_datetime(df_escalas_group['Horario Voo']).dt.time >= time(18,0)) | (pd.to_datetime(df_escalas_group['Horario Voo']).dt.time <= time(5,0))) | 
-         ((pd.to_datetime(df_escalas_group['Data | Horario Apresentacao']).dt.time >= time(18,0)) | (pd.to_datetime(df_escalas_group['Data | Horario Apresentacao']).dt.time <= time(5,0))))
+        ((pd.to_datetime(df_escalas_group['Horario Voo']).dt.time >= time(17,0)) | (pd.to_datetime(df_escalas_group['Data | Horario Apresentacao']).dt.time <= time(6,0)))
     
     mask_ln_diurnos = (df_escalas_group['Servico'].isin([' OUT -  LITORAL NORTE ', 'IN  - LITORAL NORTE '])) & \
-        ~(((pd.to_datetime(df_escalas_group['Horario Voo']).dt.time >= time(18,0)) | (pd.to_datetime(df_escalas_group['Horario Voo']).dt.time <= time(5,0))) | 
-         ((pd.to_datetime(df_escalas_group['Data | Horario Apresentacao']).dt.time >= time(18,0)) | (pd.to_datetime(df_escalas_group['Data | Horario Apresentacao']).dt.time <= time(5,0))))
+        ~((pd.to_datetime(df_escalas_group['Horario Voo']).dt.time >= time(17,0)) | (pd.to_datetime(df_escalas_group['Data | Horario Apresentacao']).dt.time <= time(6,0)))
 
     df_escalas_group.loc[mask_ln_noturnos, 'Servico'] = df_escalas_group['Servico'] + ' - NOTURNO'
 
@@ -403,25 +356,14 @@ def verificar_guia_sem_telefone(id_gsheet, guia, lista_guias_com_telefone):
 
         st.dataframe(df_itens_faltantes, hide_index=True)
 
-        # GCP projeto onde está a chave credencial
         project_id = "grupoluck"
-    
-        # ID da chave credencial do google.
         secret_id = "cred-luck-aracaju"
-    
-        # Cria o cliente.
         secret_client = secretmanager.SecretManagerServiceClient()
-    
         secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
         response = secret_client.access_secret_version(request={"name": secret_name})
-    
         secret_payload = response.payload.data.decode("UTF-8")
-    
         credentials_info = json.loads(secret_payload)
-    
         scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    
-        # Use the credentials to authorize the gspread client
         credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
         client = gspread.authorize(credentials)
         
@@ -446,6 +388,95 @@ def verificar_guia_sem_telefone(id_gsheet, guia, lista_guias_com_telefone):
 
     return telefone_guia
 
+def puxar_infos_planilha():
+
+    with st.spinner('Puxando tarifários, ubers, eventos, horas extras...'):
+
+        puxar_aba_simples(st.session_state.id_gsheet, 'Tarifário Robô', 'df_tarifario')
+
+        st.session_state.df_tarifario[['Valor', 'Valor Motoguia', 'Valor Evento', 'Valor MSC', 'Valor MI']] = \
+            st.session_state.df_tarifario[['Valor', 'Valor Motoguia', 'Valor Evento', 'Valor MSC', 'Valor MI']].apply(pd.to_numeric, errors='coerce')
+
+        puxar_aba_simples(st.session_state.id_gsheet, 'Uber Guias', 'df_uber')
+
+        st.session_state.df_uber[['Valor Uber']] = st.session_state.df_uber[['Valor Uber']].apply(pd.to_numeric, errors='coerce')
+
+        puxar_aba_simples(st.session_state.id_gsheet, 'Eventos', 'df_eventos')
+
+        st.session_state.df_eventos['Data Inicial'] = pd.to_datetime(st.session_state.df_eventos['Data Inicial']).dt.date
+
+        st.session_state.df_eventos['Data Final'] = pd.to_datetime(st.session_state.df_eventos['Data Final']).dt.date
+
+        puxar_aba_simples(st.session_state.id_gsheet, 'Hora Extra Guias', 'df_hora_extra')
+
+        st.session_state.df_hora_extra[['Valor Hora Extra']] = st.session_state.df_hora_extra[['Valor Hora Extra']].apply(pd.to_numeric, errors='coerce')
+
+        puxar_aba_simples(st.session_state.id_gsheet, 'Lista Guias Tarifário Luck', 'df_guias_tarifario_msc')
+
+def precificar_valor_de_servicos_em_eventos(df_escalas_pag):
+
+    df_escalas_pag['Evento'] = ''
+
+    for index in range(len(st.session_state.df_eventos)):
+
+        data_inicial_evento = st.session_state.df_eventos.at[index, 'Data Inicial']
+
+        data_final_evento = st.session_state.df_eventos.at[index, 'Data Final']
+
+        nome_evento = st.session_state.df_eventos.at[index, 'Nome Evento']
+
+        df_periodo_evento = df_escalas_pag[(df_escalas_pag['Data da Escala']>=data_inicial_evento) & (df_escalas_pag['Data da Escala']<=data_final_evento)].reset_index()
+
+        df_escalas_periodo_evento = st.session_state.df_escalas[st.session_state.df_escalas['Escala'].isin(df_periodo_evento['Escala'].unique())].reset_index()
+
+        df_escalas_periodo_evento = df_escalas_periodo_evento.groupby('Escala').agg({'Observacao': lambda obs: any(nome_evento in str(o) for o in obs)}).reset_index()
+
+        df_escalas_periodo_evento = df_escalas_periodo_evento[df_escalas_periodo_evento['Observacao']]
+
+        for escala in df_escalas_periodo_evento['Escala'].unique():
+
+            df_escalas_pag.loc[df_escalas_pag['Escala'] == escala, 'Valor Serviço'] = df_escalas_pag.loc[df_escalas_pag['Escala'] == escala, 'Valor Evento']
+
+            df_escalas_pag.loc[df_escalas_pag['Escala'] == escala, 'Evento'] = nome_evento
+
+    return df_escalas_pag
+
+def precificar_servicos_msc(df_escalas_pag):
+
+    df_msc = df_escalas_group[df_escalas_group['Parceiro'].str.upper().str.contains('MSC')].reset_index()
+
+    for index in range(len(df_msc)):
+
+        escala_ref = df_msc.at[index, 'Escala']
+
+        df_escalas_pag['Valor Serviço'] = np.where((df_escalas_pag['Escala'] == escala_ref) & (df_escalas_pag['Guia'].isin(st.session_state.df_guias_tarifario_msc['Guias'].unique())),
+            df_escalas_pag['Valor MSC'], np.where((df_escalas_pag['Escala'] == escala_ref) & ~(df_escalas_pag['Guia'].isin(st.session_state.df_guias_tarifario_msc['Guias'].unique())), 
+                                                  df_escalas_pag['Valor MI'], df_escalas_pag['Valor Serviço']))
+        
+    return df_escalas_pag
+
+def eliminar_escalas_city_duplicadas(df_escalas_pag):
+
+    df_escalas_city = df_escalas_pag[df_escalas_pag['Servico'].isin(['CITY TOUR HISTORICO E PANORAMICO ', 'CITY TOUR HISTORICO '])].reset_index()
+
+    df_escalas_city_duplicadas = df_escalas_city.groupby(['Data da Escala', 'Veiculo', 'Motorista', 'Guia']).agg({'Escala': transformar_em_string, 'Servico': transformar_em_string, 
+                                                                                                                  'Tipo de Servico': 'count'}).reset_index()
+    
+    df_escalas_city_duplicadas = df_escalas_city_duplicadas[df_escalas_city_duplicadas['Tipo de Servico']>1].reset_index(drop=True)
+
+    for escalas in df_escalas_city_duplicadas['Escala'].unique():
+
+        lista_escalas = escalas.split(', ')
+
+        df_escalas_ref = df_escalas_pag[df_escalas_pag['Escala'].isin(lista_escalas)].reset_index()
+
+        indice = df_escalas_ref[df_escalas_ref['Servico'] == 'CITY TOUR HISTORICO '].index
+
+        df_escalas_pag = df_escalas_pag.drop(indice).reset_index(drop=True)
+
+    st.session_state.df_pag_final = df_escalas_pag[['Data da Escala', 'Modo', 'Tipo de Servico', 'Servico', 'Veiculo', 'Motorista', 'Guia', 'Idioma', 'Motoguia', 'Evento', 'Valor Uber', 
+                                                    'Valor Hora Extra', 'Valor Serviço', 'Valor Total']]
+    
 st.set_page_config(layout='wide')
 
 if not 'id_gsheet' in st.session_state:
@@ -557,15 +588,7 @@ if gerar_mapa:
 
     # Puxando tarifários e tratando colunas de números
 
-    with st.spinner('Puxando tarifários, ubers...'):
-
-        puxar_aba_simples(st.session_state.id_gsheet, 'Tarifário Robô', 'df_tarifario')
-
-        st.session_state.df_tarifario[['Valor', 'Valor Motoguia']] = st.session_state.df_tarifario[['Valor', 'Valor Motoguia']].apply(pd.to_numeric, errors='coerce')
-
-        puxar_aba_simples(st.session_state.id_gsheet, 'Uber Guias', 'df_uber')
-
-        st.session_state.df_uber[['Valor Uber']] = st.session_state.df_uber[['Valor Uber']].apply(pd.to_numeric, errors='coerce')
+    puxar_infos_planilha()
 
     # Filtrando período solicitado pelo usuário
 
@@ -580,7 +603,8 @@ if gerar_mapa:
     # Agrupando escalas
 
     df_escalas_group = df_escalas.groupby(['Data da Escala', 'Escala', 'Veiculo', 'Motorista', 'Guia', 'Servico', 'Tipo de Servico', 'Modo'])\
-        .agg({'Apoio': transformar_em_string,  'Idioma': transformar_em_listas, 'Total ADT | CHD': 'sum', 'Horario Voo': transformar_em_listas, 'Data | Horario Apresentacao': 'min'}).reset_index()
+        .agg({'Apoio': transformar_em_string,  'Idioma': transformar_em_listas, 'Total ADT | CHD': 'sum', 'Horario Voo': transformar_em_listas, 'Data | Horario Apresentacao': 'min', 
+              'Parceiro': transformar_em_string}).reset_index()
     
     # Tratando coluna Idioma
 
@@ -616,20 +640,42 @@ if gerar_mapa:
 
     df_escalas_pag['Valor Uber'] = df_escalas_pag['Valor Uber'].fillna(0)
 
+    # Adicionando valor de hora extra por escala
+
+    df_escalas_pag = df_escalas_pag.merge(st.session_state.df_hora_extra[['Escala', 'Valor Hora Extra']], on='Escala', how='left')
+
+    df_escalas_pag['Valor Hora Extra'] = df_escalas_pag['Valor Hora Extra'].fillna(0)
+
     # Gerando Valor Serviço
 
     df_escalas_pag['Valor Serviço'] = df_escalas_pag.apply(lambda row: row['Valor Motoguia'] if row['Motoguia'] == 'X' else row['Valor'], axis=1)
 
-    # Ajustando valores idioma
+    # Precificar serviços feitos em período de evento
 
-    df_escalas_pag.loc[df_escalas_pag['Idioma']!='', 'Valor Serviço'] = df_escalas_pag['Valor Serviço']*1.2
+    df_escalas_pag = precificar_valor_de_servicos_em_eventos(df_escalas_pag)
+
+    # Precificar serviços MSC
+
+    df_escalas_pag = precificar_servicos_msc(df_escalas_pag)
+
+    # Ajustando valores idioma sem MSC
+
+    df_escalas_pag.loc[(df_escalas_pag['Idioma']!='') & (~df_escalas_pag['Parceiro'].str.upper().str.contains('MSC')), 'Valor Serviço'] = df_escalas_pag['Valor Serviço']*1.2
+
+    # Ajustando valores idiomas de serviços MSC
+
+    df_escalas_pag['n_idioma'] = df_escalas_pag['Idioma'].apply(lambda x: len(x.split(', ')) if x else 0)
+
+    df_escalas_pag.loc[(df_escalas_pag['Idioma'] != '') & (df_escalas_pag['Parceiro'].str.upper().str.contains('MSC')), 'Valor Serviço'] += \
+        df_escalas_pag.loc[(df_escalas_pag['Idioma'] != '') & (df_escalas_pag['Parceiro'].str.upper().str.contains('MSC')), 'n_idioma'] * 0.2
 
     # Gerando Valor Total
 
-    df_escalas_pag['Valor Total'] = df_escalas_pag[(['Valor Serviço', 'Valor Uber'])].sum(axis=1)
+    df_escalas_pag['Valor Total'] = df_escalas_pag[(['Valor Uber', 'Valor Serviço', 'Valor Hora Extra'])].sum(axis=1)
 
-    st.session_state.df_pag_final = df_escalas_pag[['Data da Escala', 'Modo', 'Tipo de Servico', 'Servico', 'Veiculo', 'Motorista', 'Guia', 'Idioma', 'Motoguia', 'Valor Uber', 'Valor Serviço', 
-                                                    'Valor Total']]
+    # Eliminando escalas de City Duplicadas
+
+    df_escalas_pag = eliminar_escalas_city_duplicadas(df_escalas_pag)
 
 if 'df_pag_final' in st.session_state:
 
@@ -677,7 +723,7 @@ if 'df_pag_final' in st.session_state:
 
         soma_servicos = format_currency(soma_servicos, 'BRL', locale='pt_BR')
 
-        for item in ['Valor Uber', 'Valor Serviço', 'Valor Total']:
+        for item in ['Valor Hora Extra', 'Valor Uber', 'Valor Serviço', 'Valor Total']:
 
             df_pag_guia[item] = df_pag_guia[item].apply(lambda x: format_currency(x, 'BRL', locale='pt_BR'))
 
@@ -736,7 +782,7 @@ if 'df_pag_final' in st.session_state:
 
                     soma_servicos = format_currency(soma_servicos, 'BRL', locale='pt_BR')
 
-                    for item in ['Valor Uber', 'Valor Serviço', 'Valor Total']:
+                    for item in ['Valor Hora Extra', 'Valor Uber', 'Valor Serviço', 'Valor Total']:
 
                         df_pag_guia[item] = df_pag_guia[item].apply(lambda x: format_currency(x, 'BRL', locale='pt_BR'))
 
@@ -792,7 +838,7 @@ if 'df_pag_final' in st.session_state:
 
                     soma_servicos = format_currency(soma_servicos, 'BRL', locale='pt_BR')
 
-                    for item in ['Valor Uber', 'Valor Serviço', 'Valor Total']:
+                    for item in ['Valor Hora Extra', 'Valor Uber', 'Valor Serviço', 'Valor Total']:
 
                         df_pag_guia[item] = df_pag_guia[item].apply(lambda x: format_currency(x, 'BRL', locale='pt_BR'))
 
